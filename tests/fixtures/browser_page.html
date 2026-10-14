@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><title>nerve p4 page</title>
+<style>body{font:16px Segoe UI, sans-serif;margin:24px} .spacer{height:2200px;background:linear-gradient(#fff,#ddd)}</style></head>
+<body>
+<h1>Test page</h1>
+<p>Paragraph with <b>bold</b> text and a unique marker zebra-42.</p>
+<label for="name">Name</label> <input id="name" type="text" placeholder="your name">
+<select id="color" aria-label="Color"><option value="red">Red</option><option value="green">Green</option><option value="blue">Blue</option></select>
+<label><input id="agree" type="checkbox"> I agree</label>
+<button id="go" onclick="go()">Go</button>
+<button id="later" onclick="setTimeout(() => { document.getElementById('out2').textContent = 'late arrival'; }, 800)">Later</button>
+<div id="out"></div><div id="out2"></div>
+<textarea id="notes" aria-label="Notes"></textarea>
+<div id="ed" contenteditable="true" aria-label="Editor" style="border:1px solid #888;min-height:30px"></div>
+<input id="file" type="file" aria-label="Upload">
+<p><a href="browser_second.html">Second page</a> · <a href="browser_second.html" target="_blank">New tab link</a></p>
+<div class="spacer"></div>
+<p id="bottom">Bottom of page</p>
+<script>
+function go() {
+  const n = document.getElementById('name').value;
+  document.getElementById('out').textContent = 'done: ' + n + ' / ' + document.getElementById('color').value + ' / ' + document.getElementById('agree').checked;
+  console.log('go clicked', n);
+  console.error('sample error');
+  alert('hello from page');
+}
+</script>
+</body></html>

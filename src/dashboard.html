@@ -1,0 +1,738 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>nerve</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%23111'/%3E%3Cg stroke='%23c8f560' stroke-width='2' stroke-linecap='round'%3E%3Cpath d='M13.5 14.5 8 9M18.5 14.5 24 9M16 19v5.5'/%3E%3C/g%3E%3Cg fill='%23c8f560'%3E%3Ccircle cx='16' cy='16' r='4'/%3E%3Ccircle cx='8' cy='9' r='2'/%3E%3Ccircle cx='24' cy='9' r='2'/%3E%3Ccircle cx='16' cy='25' r='2'/%3E%3C/g%3E%3C/svg%3E">
+<script>try{document.documentElement.dataset.theme=localStorage.getItem("nerve-theme")||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark")}catch{}</script>
+<style>
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/onest-latin.woff2) format("woff2")}
+@font-face{font-family:Onest;font-style:normal;font-weight:100 900;font-display:swap;src:url(/assets/onest-cyrillic.woff2) format("woff2");unicode-range:U+0301,U+0400-045f,U+0490-0491,U+04b0-04b1,U+2116}
+/* AniVerse semantic themes: no remote CSS or runtime dependencies. */
+:root{
+ --bg:#000;--panel:#0e0e10;--raise:#161618;--hover:#1f1f22;--line:#26262a;--line2:#36363c;
+ --tx:#f4f4f5;--tx2:#b4b4be;--tx3:#a1a1ab;--acc:#3788ed;--acc-tx:#fff;
+ --acc-soft:color-mix(in oklab,var(--acc) 15%,var(--bg));
+ --ok:#68d9a0;--ok-soft:#10291e;--warn:#efbd71;--warn-soft:#2c2314;--bad:#ff9992;--bad-soft:#321b1b;--info:#93b7ff;--info-soft:#16243b;
+ --sans:"Onest","Segoe UI",system-ui,sans-serif;--mono:"Cascadia Code",Consolas,ui-monospace,monospace;
+ --r:12px;--shadow:0 12px 40px #0006;color-scheme:dark;
+}
+:root[data-theme=light]{
+ --bg:#f5f5f5;--panel:#fff;--raise:#eaeaed;--hover:#e0e0e4;--line:#dcdce1;--line2:#c8c8ce;
+ --tx:#18181b;--tx2:#5d5d68;--tx3:#666672;--acc:#2166c3;--acc-tx:#fff;
+ --ok:#216a44;--ok-soft:#e1f2e8;--warn:#805008;--warn-soft:#f5ead7;--bad:#b52b29;--bad-soft:#fbe7e7;--info:#295bad;--info-soft:#e4ecfa;
+ --shadow:0 12px 40px #0002;color-scheme:light;
+}
+*{box-sizing:border-box}
+html,body{margin:0;height:100%}
+body{background:var(--bg);color:var(--tx);font:15px/1.5 var(--sans);-webkit-font-smoothing:antialiased}
+button,input,select,textarea{font:inherit;color:inherit}
+a{color:inherit}
+::selection{background:var(--acc-soft)}
+.mono{font-family:var(--mono);font-size:12.5px}
+.muted{color:var(--tx2)} .faint{color:var(--tx3)}
+.app{display:grid;grid-template-columns:224px minmax(0,1fr);min-height:100vh}
+
+/* sidebar */
+.side{position:sticky;top:0;height:100vh;border-right:0;background:var(--bg);display:flex;flex-direction:column;padding:14px 10px}
+.brand{display:flex;align-items:center;gap:10px;padding:4px 8px 16px}
+.brand b{font-size:24px;letter-spacing:-.01em}
+.brand .ver{margin-left:auto;font:11px var(--mono);color:var(--tx3)}
+.nav{position:relative;isolation:isolate;display:flex;flex-direction:column;gap:1px;overflow:auto}
+.nav .grp{font-size:13px;color:var(--tx3);padding:24px 12px 8px}
+.nav a{position:relative;z-index:1;display:flex;align-items:center;gap:10px;padding:10px 12px;border-radius:12px;min-height:44px;text-decoration:none;color:var(--tx2);cursor:pointer}
+.nav a:hover{background:var(--hover);color:var(--tx)}
+.nav a.on{background:transparent;color:var(--tx)}
+.nav a.on svg{color:var(--acc)}
+.nav::before{content:"";position:absolute;z-index:0;left:0;right:0;top:0;height:var(--nav-h,44px);transform:translateY(var(--nav-y,0));border-radius:12px;background:var(--raise);opacity:var(--nav-visible,0);transition:transform .45s cubic-bezier(.3,1.32,.5,1),height .3s,opacity .2s;pointer-events:none}
+.nav a .cnt{margin-left:auto;font:11px var(--mono);color:var(--tx3)}
+.nav a .cnt.bad{color:var(--bad)}
+.side-foot{margin-top:auto;border-top:1px solid var(--line);padding:12px 8px 2px;display:flex;flex-direction:column;gap:6px;font-size:12px;color:var(--tx2)}
+.side-foot .row{display:flex;align-items:center;gap:8px}
+.ico{width:16px;height:16px;flex:none}
+
+/* main */
+.main{min-width:0;display:flex;flex-direction:column}
+.top{position:sticky;top:0;z-index:5;display:flex;align-items:center;gap:12px;padding:16px 32px;background:var(--bg);min-height:72px}
+.top h1{font-size:18px;margin:0;font-weight:600}
+.top .crumb{color:var(--tx3)}
+.top .sp{flex:1}
+.kbd{white-space:nowrap;font:11px var(--mono);border:1px solid var(--line2);border-bottom-width:2px;border-radius:4px;padding:0 5px;color:var(--tx2)}
+.search-btn{display:flex;align-items:center;gap:8px;width:280px;white-space:nowrap;font-size:13px;padding:10px 16px;min-height:44px;border:0;border-radius:999px;background:var(--raise);color:var(--tx3);cursor:pointer}
+.search-btn:hover{border-color:var(--line2)}
+.search-btn .kbd{display:none}
+.content{padding:32px;max-width:1480px;width:100%}
+
+/* primitives */
+.btn{display:inline-flex;align-items:center;gap:7px;height:44px;padding:0 16px;border-radius:999px;border:0;background:var(--raise);cursor:pointer;white-space:nowrap;font-size:13px}
+.btn:hover{background:var(--hover)}
+.btn:disabled{opacity:.5;cursor:default}
+.btn.pri{background:var(--tx);color:var(--bg);border-radius:12px;font-weight:600}
+.btn.pri:hover{filter:brightness(1.07)}
+.btn.danger{color:var(--bad)} .btn.danger:hover{background:var(--bad-soft);border-color:color-mix(in srgb,var(--bad) 40%,transparent)}
+.btn.ghost{border-color:transparent;background:transparent}
+.btn.ghost:hover{background:var(--hover)}
+.btn.sm{height:40px;padding:0 12px;font-size:13px;border-radius:999px}
+.btn.icon{width:44px;padding:0;justify-content:center}
+.btn.sm.icon{width:40px}
+.inp{height:44px;padding:0 14px;border-radius:12px;border:0;background:var(--raise);outline:none;min-width:0}
+.inp:focus,textarea.code:focus{border-color:var(--acc);box-shadow:0 0 0 3px var(--acc-soft)}
+:focus-visible{outline:2px solid var(--acc);outline-offset:2px}
+.inp:focus-visible,textarea:focus-visible{outline:none}
+textarea.code{width:100%;min-height:420px;resize:vertical;padding:14px 16px;border-radius:var(--r);border:1px solid var(--line2);background:var(--bg);font:12.5px/1.6 var(--mono);outline:none;tab-size:2;white-space:pre}
+.card{background:transparent;border:0;border-radius:12px;min-width:0}
+.card-h{display:flex;align-items:center;gap:10px;padding:14px 18px;border-bottom:1px solid var(--line)}
+.card-h h3{margin:0;font-size:18px;font-weight:600}
+.card-h .sp{flex:1}
+.card-b{padding:18px}
+.badge{display:inline-flex;align-items:center;gap:6px;height:22px;padding:0 8px;border-radius:5px;font-size:12px;background:var(--raise);color:var(--tx2);white-space:nowrap}
+.badge.ok{background:var(--ok-soft);color:var(--ok)} .badge.warn{background:var(--warn-soft);color:var(--warn)}
+.badge.bad{background:var(--bad-soft);color:var(--bad)} .badge.info{background:var(--info-soft);color:var(--info)}
+.badge.acc{background:var(--acc-soft);color:var(--acc)}
+.dot{width:7px;height:7px;border-radius:50%;background:currentColor;flex:none}
+.dot.live{animation:none}
+@keyframes pulse{0%{box-shadow:0 0 0 0 color-mix(in srgb,currentColor 50%,transparent)}70%{box-shadow:0 0 0 6px transparent}100%{box-shadow:0 0 0 0 transparent}}
+@media (prefers-reduced-motion:reduce){.dot.live{animation:none}}
+.grid{display:grid;gap:16px}
+.g4{grid-template-columns:repeat(4,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g2{grid-template-columns:repeat(2,1fr)}
+.stack{display:flex;flex-direction:column;gap:16px}
+.row{display:flex;align-items:center;gap:10px}
+.wrap{flex-wrap:wrap}
+.sp{flex:1}
+.stat{padding:20px 0}
+.stat .k{font-size:12px;color:var(--tx2);display:flex;align-items:center;gap:6px}
+.stat .v{font-size:36px;font-weight:600;letter-spacing:-.02em;margin-top:6px;font-variant-numeric:tabular-nums}
+.stat .s{font-size:12px;color:var(--tx3);margin-top:2px}
+table{width:100%;border-collapse:collapse}
+th{font-weight:500;font-size:12px;color:var(--tx3);text-align:left;padding:9px 18px;border-bottom:1px solid var(--line);white-space:nowrap}
+td{padding:10px 18px;border-bottom:1px solid var(--line);vertical-align:middle}
+tr:last-child td{border-bottom:0}
+tbody tr:hover td{background:color-mix(in srgb,var(--hover) 50%,transparent)}
+tr.click{cursor:pointer}
+td.r,th.r{text-align:right}
+.tbl-wrap{overflow:auto}
+.empty{padding:40px 18px;text-align:center;color:var(--tx3)}
+.clip{overflow:hidden;text-overflow:ellipsis;white-space:nowrap;max-width:420px}
+.pre{margin:0;padding:14px 16px;background:var(--bg);border:1px solid var(--line);border-radius:var(--r);font:12px/1.6 var(--mono);white-space:pre-wrap;word-break:break-word;overflow:auto;max-height:560px;color:var(--tx2)}
+.pre .hl-err{color:var(--bad)} .pre .hl-warn{color:var(--warn)} .pre .hl-ok{color:var(--ok)}
+.seg{display:inline-flex;border:0;border-radius:999px;padding:4px;gap:4px;background:var(--raise);flex-wrap:wrap}
+.seg button{border:0;background:transparent;min-height:40px;padding:6px 14px;border-radius:999px;cursor:pointer;color:var(--tx2);font-size:12.5px}
+.seg button.on{background:var(--raise);color:var(--tx)}
+.tabs{display:flex;gap:2px;border-bottom:1px solid var(--line);margin-bottom:18px}
+.tabs button{border:0;background:transparent;padding:9px 12px;cursor:pointer;color:var(--tx2);border-bottom:2px solid transparent;margin-bottom:-1px}
+.tabs button.on{color:var(--tx);border-bottom-color:var(--acc)}
+.tabs button:hover{color:var(--tx)}
+.kv{display:grid;grid-template-columns:160px 1fr;gap:10px 18px;font-size:13px}
+.kv dt{color:var(--tx3)} .kv dd{margin:0;min-width:0;overflow-wrap:anywhere}
+.switch{position:relative;width:34px;height:20px;flex:none;cursor:pointer}
+.switch input{position:absolute;opacity:0;inset:0;cursor:pointer;margin:0}
+.switch span{position:absolute;inset:0;border-radius:20px;background:var(--line2);transition:.15s}
+.switch span:after{content:"";position:absolute;width:14px;height:14px;left:3px;top:3px;border-radius:50%;background:#fff;transition:.15s}
+.switch input:checked+span{background:var(--acc)}
+.switch input:checked+span:after{transform:translateX(14px);background:var(--acc-tx)}
+.switch input:focus-visible+span{outline:2px solid var(--acc);outline-offset:2px}
+.page-h{display:flex;align-items:flex-end;gap:16px;margin-bottom:22px}
+.page-h h2{margin:0;font-size:36px;letter-spacing:-.02em;font-weight:600}
+.page-h p{margin:4px 0 0;color:var(--tx2)}
+.page-h .sp{flex:1}
+.link{color:var(--acc);text-decoration:none;cursor:pointer} .link:hover{text-decoration:underline}
+.copy{cursor:pointer} .copy:hover{color:var(--tx)}
+.hero{padding:8px 0 32px;display:grid;grid-template-columns:1.3fr 1fr;gap:24px;align-items:center}
+.hero>*{min-width:0}
+.hero h2{margin:0 0 12px;font-size:36px;letter-spacing:-.02em}
+.urlbox{display:flex;align-items:center;gap:8px;padding:8px 8px 8px 16px;border:0;border-radius:12px;background:var(--raise)}
+.urlbox code{font:12.5px var(--mono);flex:1;min-width:0;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
+.urlbox .lbl{font-size:11px;color:var(--tx3);width:46px;flex:none}
+.list-item{display:flex;align-items:center;gap:12px;padding:11px 18px;border-bottom:1px solid var(--line)}
+.list-item:last-child{border-bottom:0}
+ .plug-ico{width:34px;height:34px;border-radius:0;display:grid;place-items:center;background:transparent;font:600 13px var(--mono);color:var(--tx2);flex:none;text-transform:uppercase}
+.pcard{padding:20px;background:var(--panel);display:flex;flex-direction:column;gap:12px;cursor:pointer;transition:border-color .12s}
+.pcard:hover{border-color:var(--line2)}
+.pcard .d{color:var(--tx2);font-size:13px;display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;min-height:39px}
+.chip{display:inline-block;font:11.5px var(--mono);padding:1px 7px;border-radius:4px;background:var(--raise);color:var(--tx2)}
+.err-box{padding:10px 12px;border-radius:7px;background:var(--bad-soft);color:var(--bad);font:12px/1.5 var(--mono);white-space:pre-wrap}
+.cols-main{grid-template-columns:2fr 1fr;align-items:start}.cols-side{grid-template-columns:1fr 340px;align-items:start}
+.split{display:grid;grid-template-columns:300px 1fr;gap:16px;align-items:start}
+.sk-list{max-height:calc(100vh - 220px);overflow:auto}
+.sk-item{padding:11px 14px;border-bottom:1px solid var(--line);cursor:pointer}
+.sk-item:hover{background:var(--hover)}
+.sk-item.on{background:var(--raise);box-shadow:inset 2px 0 0 var(--acc)}
+.sk-item .n{font-weight:500;font-size:13px;display:flex;gap:6px;align-items:center}
+.sk-item .d{font-size:12px;color:var(--tx3);display:-webkit-box;-webkit-line-clamp:2;-webkit-box-orient:vertical;overflow:hidden;margin-top:2px}
+.env-row{display:grid;grid-template-columns:34px 220px 1fr 32px;gap:12px;align-items:start;padding:12px 0;border-bottom:1px solid var(--line)}
+.env-row:last-child{border-bottom:0}
+.env-row .key{font:12.5px var(--mono);padding-top:6px;overflow-wrap:anywhere}
+.env-row .hint{font-size:12px;color:var(--tx3);margin-top:5px}
+.env-row.off .key{color:var(--tx3)}
+.field{display:flex;flex-direction:column;gap:6px}
+.field label{font-size:12px;color:var(--tx2)}
+.tool{border-bottom:1px solid var(--line)}
+.tool:last-child{border-bottom:0}
+.tool-h{display:flex;align-items:center;gap:12px;padding:12px 18px;cursor:pointer}
+.tool-h:hover{background:var(--hover)}
+.tool-h .d{color:var(--tx2);font-size:13px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap;flex:1;min-width:0}
+.tool-b{padding:4px 18px 18px 64px}
+.tool-b table td,.tool-b table th{padding:7px 10px}
+.chev{transition:transform .12s;color:var(--tx3)}
+.open>.tool-h .chev{transform:rotate(90deg)}
+/* overlays */
+.ovl{position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:40;display:flex;align-items:flex-start;justify-content:center;padding-top:12vh}
+.pal{width:600px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.pal input{width:100%;border:0;border-bottom:1px solid var(--line);background:transparent;padding:16px 18px;font-size:15px;outline:none}
+.pal .res{max-height:380px;overflow:auto;padding:6px}
+.pal .it{display:flex;align-items:center;gap:10px;padding:9px 12px;border-radius:7px;cursor:pointer;color:var(--tx2)}
+.pal .it.on{background:var(--raise);color:var(--tx)}
+.pal .it .t{margin-left:auto;font-size:11px;color:var(--tx3)}
+.drawer{position:fixed;top:0;right:0;bottom:0;width:min(760px,100vw);background:var(--panel);border-left:1px solid var(--line2);z-index:41;box-shadow:var(--shadow);display:flex;flex-direction:column}
+.drawer .card-h{padding:16px 20px}
+.drawer .body{padding:20px;overflow:auto;flex:1}
+.modal{width:480px;max-width:calc(100vw - 32px);background:var(--panel);border:1px solid var(--line2);border-radius:12px;box-shadow:var(--shadow)}
+.modal .card-b{display:flex;flex-direction:column;gap:14px}
+.modal .foot{display:flex;justify-content:flex-end;gap:8px;padding:14px 18px;border-top:1px solid var(--line)}
+.toasts{position:fixed;bottom:20px;right:20px;z-index:60;display:flex;flex-direction:column;gap:8px}
+.toast{min-width:260px;max-width:420px;padding:11px 14px;border-radius:8px;background:var(--raise);border:1px solid var(--line2);box-shadow:var(--shadow);font-size:13px;display:flex;gap:10px;align-items:flex-start}
+.toast.bad{border-color:color-mix(in srgb,var(--bad) 45%,transparent)}
+.toast .dot{margin-top:6px}
+.offline{background:var(--bad-soft);color:var(--bad);padding:8px 28px;font-size:13px;border-bottom:1px solid var(--line)}
+.mobile-nav{display:none}
+@media (max-width:1100px){.g4{grid-template-columns:repeat(2,1fr)}.hero{grid-template-columns:minmax(0,1fr)}.g3{grid-template-columns:repeat(2,1fr)}}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}.side{display:none}.mobile-nav{display:flex}
+  .content{padding:18px 16px}.top{padding:10px 16px}.search-btn{width:auto}.search-btn .lbl,.search-btn .kbd{display:none}
+  .g4,.g3,.g2,.split,.cols-main,.cols-side{grid-template-columns:1fr}.env-row{grid-template-columns:34px 1fr 32px}.env-row .val{grid-column:1/4}.env-row>button{grid-column:3;grid-row:1}
+  .kv{grid-template-columns:1fr;gap:2px 0}.kv dd{margin-bottom:8px}.page-h{flex-wrap:wrap}
+  td,th{padding-left:12px;padding-right:12px}.hide-m{display:none}.tool-b{padding-left:18px}
+}
+/* Functional controls retain density; sections sit directly on the canvas. */
+.btn{transition:background .15s,transform .15s}.btn:active:not(:disabled){transform:scale(.98)}
+.seg button,.nav a{transition:background .2s,color .2s}.seg button.on{background:var(--panel)}
+.card-h{padding-left:0;padding-right:0}.card-b{padding-left:0;padding-right:0}
+.g4{column-gap:32px}.grid.g4>.stat{border-radius:0}.stack{gap:24px}
+.tabs{overflow:auto}.tabs button{min-height:44px;white-space:nowrap;font-size:15px}
+.tool-h,.list-item{padding-left:0;padding-right:0;min-height:48px}
+.pre,textarea.code{border:0;background:var(--raise);font-size:13px}
+.drawer .card-h,.modal .card-h{padding:20px}.modal .card-b{padding:20px}
+.top h1{overflow-wrap:anywhere}.page-h h2{line-height:1.15;letter-spacing:-.04em}
+.brand svg{width:32px;height:32px}.switch{width:44px;height:28px}.switch span:after{width:22px;height:22px}
+.switch input:checked+span:after{transform:translateX(16px)}
+@media(max-width:860px){.hero h2,.page-h h2{font-size:30px}.top{gap:8px}.top .sp{min-width:0}.search-btn{width:44px;padding:0;justify-content:center;flex:none}.content{padding:24px 16px}.g4{grid-template-columns:repeat(2,minmax(0,1fr))}.hero{gap:24px}.hero .muted{max-width:48ch}.toasts{left:16px;right:16px}.toast{min-width:0;max-width:100%}.row.wrap{gap:8px}}
+@media(prefers-reduced-motion:reduce){*,*::before,*::after{animation:none!important;transition:none!important;scroll-behavior:auto!important}}
+/* Native scrollbars keep wheel, touch, and keyboard behavior. */
+*{scrollbar-width:thin;scrollbar-color:var(--line2) transparent}
+::-webkit-scrollbar{width:10px;height:10px}::-webkit-scrollbar-track{background:transparent}
+::-webkit-scrollbar-thumb{background:var(--line2);border:3px solid var(--bg);border-radius:999px}
+::-webkit-scrollbar-thumb:hover{background:var(--tx3)}::-webkit-scrollbar-corner{background:transparent}
+html{scrollbar-gutter:stable}.ovl{padding-left:16px;padding-right:16px;padding-bottom:16px;overflow:auto}.modal{flex-shrink:0;max-height:calc(100dvh - 32px);overflow:auto}
+@media(forced-colors:active){*{scrollbar-color:auto}}
+</style>
+</head>
+<body>
+<div class="app">
+  <aside class="side">
+    <div class="brand"><span id="logo"></span><b>nerve</b><span class="ver" id="ver"></span></div>
+    <nav class="nav" id="nav"></nav>
+    <div class="side-foot" id="sidefoot"></div>
+  </aside>
+  <div class="main">
+    <div class="top">
+      <button class="btn icon ghost mobile-nav" id="mnav" aria-label="Menu"></button>
+      <h1 id="title"></h1>
+      <span class="sp"></span>
+      <button class="search-btn" id="openPal" aria-label="Search"><span id="sIco"></span><span class="lbl">Search or run a command</span><span class="kbd">Ctrl K</span></button>
+      <button class="btn icon ghost" id="theme" aria-label="Toggle theme"></button>
+    </div>
+    <div id="offline"></div>
+    <main class="content" id="view"></main>
+  </div>
+</div>
+<div class="toasts" id="toasts"></div>
+<div id="layer"></div>
+<script>
+"use strict";
+/* ---------- icons (1.6px stroke, 24 grid) ---------- */
+const P={
+ home:'<path d="M3 10.5 12 3l9 7.5V20a1 1 0 0 1-1 1h-5v-6h-6v6H4a1 1 0 0 1-1-1z"/>',
+ users:'<path d="M16 21v-2a4 4 0 0 0-4-4H6a4 4 0 0 0-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M22 21v-2a4 4 0 0 0-3-3.87M16 3.13a4 4 0 0 1 0 7.75"/>',
+ play:'<rect x="3" y="3" width="18" height="18" rx="2"/><path d="m10 8 6 4-6 4z"/>',
+ tool:'<path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94z"/>',
+ plug:'<path d="M12 22v-5M9 8V2M15 8V2M18 8v5a4 4 0 0 1-4 4h-4a4 4 0 0 1-4-4V8z"/>',
+ book:'<path d="M4 19.5v-15A2.5 2.5 0 0 1 6.5 2H20v20H6.5a2.5 2.5 0 0 1 0-5H20"/><path d="M9 7h6"/>',
+ key:'<circle cx="7.5" cy="15.5" r="5.5"/><path d="m21 2-9.6 9.6M15.5 7.5l3 3L22 7l-3-3"/>',
+ logs:'<path d="M4 6h16M4 12h16M4 18h10"/>',
+ gear:'<circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 1 1-2.83 2.83l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-4 0v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 1 1-2.83-2.83l.06-.06A1.65 1.65 0 0 0 4.68 15a1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1 0-4h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 1 1 2.83-2.83l.06.06A1.65 1.65 0 0 0 9 4.68a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 4 0v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 1 1 2.83 2.83l-.06.06A1.65 1.65 0 0 0 19.4 9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 0 4h-.09a1.65 1.65 0 0 0-1.51 1z"/>',
+ search:'<circle cx="11" cy="11" r="7"/><path d="m20 20-3.5-3.5"/>',
+ sun:'<circle cx="12" cy="12" r="4"/><path d="M12 2v2M12 20v2M4.9 4.9l1.4 1.4M17.7 17.7l1.4 1.4M2 12h2M20 12h2M4.9 19.1l1.4-1.4M17.7 6.3l1.4-1.4"/>',
+ moon:'<path d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8z"/>',
+ copy:'<rect x="9" y="9" width="13" height="13" rx="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/>',
+ refresh:'<path d="M21 12a9 9 0 1 1-2.64-6.36L21 8"/><path d="M21 3v5h-5"/>',
+ power:'<path d="M12 2v10"/><path d="M18.4 6.6a9 9 0 1 1-12.77.04"/>',
+ x:'<path d="M18 6 6 18M6 6l12 12"/>',
+ plus:'<path d="M12 5v14M5 12h14"/>',
+ trash:'<path d="M3 6h18M8 6V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2M19 6l-1 14a2 2 0 0 1-2 2H8a2 2 0 0 1-2-2L5 6"/>',
+ chev:'<path d="m9 6 6 6-6 6"/>',
+ globe:'<circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15 15 0 0 1 0 20 15 15 0 0 1 0-20"/>',
+ cpu:'<rect x="5" y="5" width="14" height="14" rx="2"/><path d="M9 9h6v6H9zM9 2v3M15 2v3M9 19v3M15 19v3M2 9h3M2 15h3M19 9h3M19 15h3"/>',
+ clock:'<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>',
+ download:'<path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4M7 10l5 5 5-5M12 15V3"/>',
+ save:'<path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z"/><path d="M17 21v-8H7v8M7 3v5h8"/>',
+ eye:'<path d="M2 12s3.5-7 10-7 10 7 10 7-3.5 7-10 7S2 12 2 12z"/><circle cx="12" cy="12" r="3"/>',
+ back:'<path d="m15 18-6-6 6-6"/>',
+ menu:'<path d="M3 6h18M3 12h18M3 18h18"/>',
+ ext:'<path d="M15 3h6v6M10 14 21 3M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/>',
+ shield:'<path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>',
+ stop:'<rect x="6" y="6" width="12" height="12" rx="1.5"/>',
+};
+const I=(n,cls="ico")=>`<svg class="${cls}" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">${P[n]||""}</svg>`;
+const LOGO=`<svg width="26" height="26" viewBox="0 0 32 32" aria-hidden="true"><rect width="32" height="32" rx="8" fill="var(--raise)" stroke="var(--line2)"/><g stroke="var(--acc)" stroke-width="2" stroke-linecap="round" fill="none"><path d="M13.5 14.5 8 9M18.5 14.5 24 9M16 19v5.5"/></g><circle cx="16" cy="16" r="4" fill="var(--acc)"/><g fill="var(--acc)"><circle cx="8" cy="9" r="2"/><circle cx="24" cy="9" r="2"/><circle cx="16" cy="25" r="2"/></g></svg>`;
+
+/* ---------- utils ---------- */
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const ms=t=>!t?0:(t<1e12?t*1000:t);
+function ago(t){t=ms(t);if(!t)return"never";let s=Math.max(0,(Date.now()-t)/1000);if(s<5)return"just now";if(s<60)return Math.floor(s)+"s ago";if(s<3600)return Math.floor(s/60)+"m ago";if(s<86400)return Math.floor(s/3600)+"h ago";return Math.floor(s/86400)+"d ago"}
+function dur(m){let s=Math.floor((m||0)/1000);const d=Math.floor(s/86400);s%=86400;const h=Math.floor(s/3600);s%=3600;const mi=Math.floor(s/60);s%=60;if(d)return`${d}d ${h}h`;if(h)return`${h}h ${mi}m`;if(mi)return`${mi}m ${s}s`;return`${s}s`}
+const when=t=>t?new Date(ms(t)).toLocaleString([], {month:"short",day:"numeric",hour:"2-digit",minute:"2-digit"}):"—";
+const bytes=n=>n<1024?n+" B":n<1048576?(n/1024).toFixed(1)+" KB":(n/1048576).toFixed(1)+" MB";
+async function api(path){const r=await fetch(path,{cache:"no-store",signal:AbortSignal.timeout(10000)});if(!r.ok)throw new Error((await r.text())||r.statusText);return r.json()}
+async function act(action,extra={},quiet=false){
+  try{const r=await fetch("/api/action",{method:"POST",headers:{"content-type":"application/json"},body:JSON.stringify({action,...extra}),signal:AbortSignal.timeout(30000)});
+    const j=await r.json().catch(()=>({ok:false,message:r.statusText}));
+    if(!quiet||!j.ok)toast(j.message||(j.ok?"done":"failed"),!j.ok);return j}
+  catch(e){toast(String(e.message||e),true);return{ok:false}}
+}
+function toast(msg,bad=false){const t=document.createElement("div");t.className="toast"+(bad?" bad":"");t.innerHTML=`<span class="dot" style="color:var(--${bad?"bad":"ok"})"></span><div>${esc(msg)}</div>`;$("#toasts").append(t);setTimeout(()=>t.remove(),bad?7000:3200)}
+async function copy(text,label="Copied"){try{await navigator.clipboard.writeText(text)}catch{const a=document.createElement("textarea");a.value=text;document.body.append(a);a.select();document.execCommand("copy");a.remove()}toast(label)}
+function stateBadge(s){const m={running:"ok",online:"ok",disabled:"",stopped:"",error:"bad",starting:"warn",connecting:"warn",offline:"bad"};const c=m[s]??"warn";return`<span class="badge ${c}"><span class="dot${c==="ok"?" live":""}"></span>${esc(s||"unknown")}</span>`}
+function jobBadge(j){if(j.running)return`<span class="badge info"><span class="dot live"></span>running</span>`;const st=String(j.status||"");if(/exited\(0\)/.test(st))return`<span class="badge ok">${esc(st)}</span>`;if(/killed/.test(st))return`<span class="badge warn">${esc(st)}</span>`;return`<span class="badge bad">${esc(st)}</span>`}
+function hlLog(t){return esc(t).split("\n").map(l=>/\b(ERROR|error|failed|panic|Traceback)\b/.test(l)?`<span class="hl-err">${l}</span>`:/\b(WARN|warn|warning)\b/.test(l)?`<span class="hl-warn">${l}</span>`:l).join("\n")}
+const ACTIVE_MS=10*60*1000;
+
+/* ---------- state ---------- */
+const S={state:null,tools:null,skills:null,offline:false,route:"overview",arg:null,ui:{}};
+const ROUTES=[
+ {id:"overview",t:"Overview",i:"home",g:""},
+ {id:"sessions",t:"Sessions",i:"users",g:"Activity"},
+ {id:"jobs",t:"Jobs",i:"play",g:"Activity"},
+ {id:"tools",t:"Tools",i:"tool",g:"Capabilities"},
+ {id:"plugins",t:"Plugins",i:"plug",g:"Capabilities"},
+ {id:"skills",t:"Skills",i:"book",g:"Capabilities"},
+ {id:"access",t:"Access",i:"key",g:"System"},
+ {id:"logs",t:"Logs",i:"logs",g:"System"},
+ {id:"settings",t:"Settings",i:"gear",g:"System"},
+];
+function go(id,arg=null){location.hash=arg?`${id}/${encodeURIComponent(arg)}`:id}
+function parseHash(){const [a,b]=location.hash.slice(1).split("/");S.route=ROUTES.some(r=>r.id===a)?a:"overview";S.arg=b?decodeURIComponent(b):null}
+
+/* ---------- chrome ---------- */
+function renderNav(){
+  const st=S.state?.status;const plugs=st?.plugins||[];const bad=plugs.filter(p=>p.state==="error").length;
+  const active=(S.state?.sessions||[]).filter(s=>Date.now()-ms(s.last_seen)<ACTIVE_MS).length;
+  const cnt={sessions:active||"",jobs:st?.jobs_running||"",tools:st?.tools?.length||"",plugins:bad?`${bad} err`:plugs.length||"",skills:S.skills?.skills?.length||""};
+  let g=null,h="";
+  for(const r of ROUTES){if(r.g!==g){g=r.g;if(g)h+=`<div class="grp">${g}</div>`}
+    h+=`<a class="${S.route===r.id?"on":""}" href="#${r.id}">${I(r.i)}<span>${r.t}</span><span class="cnt ${r.id==="plugins"&&bad?"bad":""}">${cnt[r.id]??""}</span></a>`}
+  $("#nav").innerHTML=h;
+  const nav=$("#nav"),selected=nav.querySelector(".on");if(selected){nav.style.setProperty("--nav-y",selected.offsetTop+"px");nav.style.setProperty("--nav-h",selected.offsetHeight+"px");nav.style.setProperty("--nav-visible","1")}
+  const tn=st?.tunnel||{};
+  $("#sidefoot").innerHTML=st?`<div class="row"><span class="dot" style="color:var(--${tn.state==="online"?"ok":tn.state==="disabled"||!tn.provider||tn.provider==="none"?"tx3":"warn"})"></span>${esc(tn.provider||"no tunnel")} · ${esc(tn.state||"off")}</div><div class="row faint">${I("cpu")}${esc(st.host)} · pid ${st.pid}</div>`:`<div class="faint">connecting…</div>`;
+  $("#ver").textContent=st?"v"+st.version:"";
+  const r=ROUTES.find(r=>r.id===S.route);$("#title").innerHTML=esc(r.t)+(S.arg?` <span class="crumb">/ ${esc(S.arg)}</span>`:"");
+  document.title=`${r.t} · nerve`;
+  $("#offline").innerHTML=S.offline?`<div class="offline">nerve is not responding — retrying…</div>`:"";
+}
+
+/* ---------- pages ---------- */
+const V={};
+const pageHead=(t,p,actions="")=>`<div class="page-h"><div><h2>${t}</h2>${p?`<p>${p}</p>`:""}</div><span class="sp"></span><div class="row wrap">${actions}</div></div>`;
+
+V.overview=()=>{
+  const d=S.state;if(!d)return`<div class="empty">Loading…</div>`;const st=d.status;const tn=st.tunnel||{};
+  const pub=st.public_url?st.public_url.replace(/\/$/,"")+"/mcp":"";const loc=`http://${st.local_addr}/mcp`;
+  const active=d.sessions.filter(s=>Date.now()-ms(s.last_seen)<ACTIVE_MS);
+  const plugs=st.plugins||[];const okP=plugs.filter(p=>p.state==="running").length;
+  const recent=d.jobs.slice(0,5);
+  return `
+  <div class="card hero">
+    <div>
+      <div class="row" style="margin-bottom:10px">${stateBadge(tn.state||"local only")}<span class="badge">${esc(tn.provider||"no tunnel")}</span>${st.supervised?`<span class="badge">service</span>`:""}${st.elevated?`<span class="badge">admin</span>`:""}</div>
+      <h2>${esc(st.host)} is reachable</h2>
+      <div class="muted">Connect an MCP client using one of these addresses. Remote clients sign in with your PIN${st.auth.pin_set?"":` — <a class="link" href="#access">no PIN set yet</a>`}.</div>
+    </div>
+    <div class="stack" style="gap:8px">
+      ${pub?`<div class="urlbox"><span class="lbl">public</span><code>${esc(pub)}</code><button class="btn sm" data-copy="${esc(pub)}">${I("copy")}Copy</button></div>`:""}
+      <div class="urlbox"><span class="lbl">local</span><code>${esc(loc)}</code><button class="btn sm" data-copy="${esc(loc)}">${I("copy")}Copy</button></div>
+    </div>
+  </div>
+  <div class="grid g4" style="margin-top:16px">
+    <div class="card stat"><div class="k">${I("clock")}Uptime</div><div class="v">${dur(st.uptime_ms)}</div><div class="s">v${esc(st.version)} · pid ${st.pid}</div></div>
+    <div class="card stat"><div class="k">${I("users")}Active sessions</div><div class="v">${active.length}</div><div class="s">${st.sessions} known</div></div>
+    <div class="card stat"><div class="k">${I("play")}Running jobs</div><div class="v">${st.jobs_running}</div><div class="s">${d.jobs.length} in history</div></div>
+    <div class="card stat"><div class="k">${I("tool")}Tools</div><div class="v">${st.tools.length}</div><div class="s">${okP}/${plugs.length} plugins up</div></div>
+  </div>
+  <div class="grid g2" style="margin-top:16px">
+    <div class="card"><div class="card-h"><h3>Plugins</h3><span class="sp"></span><a class="link" href="#plugins">Manage</a></div>
+      ${plugs.length?plugs.map(p=>`<div class="list-item click" style="cursor:pointer" data-go="plugins/${esc(p.name)}"><div class="plug-ico">${esc(p.name.slice(0,2))}</div><div style="min-width:0;flex:1"><div style="font-weight:500">${esc(p.name)}</div><div class="faint clip" style="font-size:12px">${esc(p.error||p.description)}</div></div>${stateBadge(p.state)}</div>`).join(""):`<div class="empty">No plugins</div>`}
+    </div>
+    <div class="card"><div class="card-h"><h3>Recent jobs</h3><span class="sp"></span><a class="link" href="#jobs">All jobs</a></div>
+      ${recent.length?recent.map(j=>`<div class="list-item" style="cursor:pointer" data-job="${esc(j.id)}"><div style="min-width:0;flex:1"><div class="mono clip">${esc(j.label||j.command)}</div><div class="faint" style="font-size:12px">${ago(j.started)} · ${dur(j.elapsed_ms)}</div></div>${jobBadge(j)}</div>`).join(""):`<div class="empty">Nothing ran yet</div>`}
+    </div>
+  </div>`;
+};
+
+V.sessions=()=>{
+  const d=S.state;if(!d)return"";const all=S.ui.allSessions;
+  let rows=[...d.sessions].sort((a,b)=>ms(b.last_seen)-ms(a.last_seen));
+  const activeN=rows.filter(s=>Date.now()-ms(s.last_seen)<ACTIVE_MS).length;
+  if(!all)rows=rows.filter(s=>Date.now()-ms(s.last_seen)<ACTIVE_MS);
+  return pageHead("Sessions","MCP clients that talked to nerve. Sessions survive restarts, so old ones linger until they expire.",
+    `<div class="seg"><button data-ui="allSessions:0" class="${all?"":"on"}">Active · ${activeN}</button><button data-ui="allSessions:1" class="${all?"on":""}">All · ${d.sessions.length}</button></div>`)+
+  `<div class="card tbl-wrap"><table><thead><tr><th>Client</th><th class="hide-m">Protocol</th><th class="hide-m">Started</th><th>Last seen</th><th class="r">In flight</th></tr></thead><tbody>
+  ${rows.length?rows.map(s=>`<tr><td><div style="font-weight:500">${esc(s.client||"unknown")}</div><div class="mono faint">${esc(s.id.slice(0,12))}…</div></td><td class="hide-m mono muted">${esc(s.protocol)}</td><td class="hide-m muted">${when(s.created)}</td><td class="muted">${ago(s.last_seen)}</td><td class="r">${s.inflight?`<span class="badge info"><span class="dot live"></span>${s.inflight}</span>`:`<span class="faint">0</span>`}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No active sessions in the last 10 minutes</td></tr>`}
+  </tbody></table></div>`;
+};
+
+V.jobs=()=>{
+  const d=S.state;if(!d)return"";const f=S.ui.jobFilter||"all";
+  let rows=d.jobs;if(f==="running")rows=rows.filter(j=>j.running);if(f==="failed")rows=rows.filter(j=>!j.running&&!/exited\(0\)/.test(j.status));
+  return pageHead("Jobs","Background processes started with <span class=\"mono\">exec {background:true}</span>. They keep running across restarts.",
+    `<div class="seg">${["all","running","failed"].map(x=>`<button data-ui="jobFilter:${x}" class="${f===x?"on":""}">${x[0].toUpperCase()+x.slice(1)}</button>`).join("")}</div><button class="btn" data-act="jobs_clean">${I("trash")}Clear finished</button>`)+
+  `<div class="card tbl-wrap"><table><thead><tr><th>Command</th><th>Status</th><th class="hide-m">Started</th><th class="hide-m r">Duration</th><th class="r"></th></tr></thead><tbody>
+  ${rows.length?rows.map(j=>`<tr class="click" data-job="${esc(j.id)}"><td><div class="mono clip">${esc(j.command)}</div><div class="faint" style="font-size:12px">${j.label?`<span class="chip">${esc(j.label)}</span> `:""}<span class="mono">${esc(j.id)}</span> · pid ${j.pid}</div></td><td>${jobBadge(j)}</td><td class="hide-m muted">${ago(j.started)}</td><td class="hide-m r mono muted">${dur(j.elapsed_ms)}</td><td class="r">${j.running?`<button class="btn sm danger" data-act="job_kill" data-id="${esc(j.id)}">${I("stop")}Stop</button>`:""}</td></tr>`).join(""):`<tr><td colspan="5" class="empty">No jobs here</td></tr>`}
+  </tbody></table></div>`;
+};
+
+function schemaRows(sc){
+  const props=sc?.properties||{};const req=new Set(sc?.required||[]);const keys=Object.keys(props);
+  if(!keys.length)return`<div class="faint">No parameters.</div>`;
+  return `<table><thead><tr><th>Parameter</th><th>Type</th><th>Description</th></tr></thead><tbody>${keys.map(k=>{const p=props[k]||{};let ty=p.type||(p.oneOf?"any":"");if(ty==="array"&&p.items?.type)ty=p.items.type+"[]";
+    return`<tr><td class="mono" style="white-space:nowrap">${esc(k)}${req.has(k)?`<span style="color:var(--acc)"> *</span>`:""}</td><td class="mono muted">${esc(ty)}</td><td class="muted" style="font-size:13px">${esc(p.description||"")}${p.enum?`<div style="margin-top:4px;display:flex;gap:4px;flex-wrap:wrap">${p.enum.map(e=>`<span class="chip">${esc(e)}</span>`).join("")}</div>`:""}</td></tr>`}).join("")}</tbody></table>`;
+}
+function actionsOf(desc){const m=String(desc).match(/Actions?:\s*([\s\S]*)/);if(!m)return[];const out=[];const re=/(?:^|[;.]\s+)([a-z_]+(?:\/[a-z_]+)*)\s*(\{[^}]*\})?/g;let x;while((x=re.exec(m[1]))&&out.length<40){if(x[1].length>1)out.push(x[1])}return[...new Set(out)]}
+V.tools=()=>{
+  const t=S.tools;if(!t)return`<div class="empty">Loading tools…</div>`;const q=(S.ui.toolQ||"").toLowerCase();
+  const src=[...t.builtin.map(x=>({...x,_src:"built-in"})),...t.plugins.map(x=>({...x,_src:(x.description.match(/^\[plugin ([^\]]+)\]/)||[])[1]||"plugin"}))];
+  const list=src.filter(x=>!q||x.name.toLowerCase().includes(q)||String(x.description).toLowerCase().includes(q));
+  const open=S.ui.toolOpen||S.arg;
+  const groups={};for(const x of list){(groups[x._src==="built-in"?"Built-in":"Plugins"]??=[]).push(x)}
+  return pageHead("Tools","Everything an AI client sees in <span class=\"mono\">tools/list</span>, with full parameter docs.",
+    `<input class="inp" id="toolQ" placeholder="Filter tools" value="${esc(S.ui.toolQ||"")}" style="width:240px">`)+
+  (Object.keys(groups).length?Object.entries(groups).map(([g,xs])=>`<div class="faint" style="font-size:12px;margin:0 0 8px 2px">${g} · ${xs.length}</div><div class="card" style="margin-bottom:20px">${xs.map(x=>{const desc=String(x.description).replace(/^\[(dd MCP|plugin [^\]]+)\]\s*/,"");const acts=actionsOf(desc);
+    return`<div class="tool ${open===x.name?"open":""}"><div class="tool-h" data-tool="${esc(x.name)}">${I("chev","ico chev")}<span class="mono" style="font-weight:600;min-width:90px">${esc(x.name)}</span>${x._src!=="built-in"&&x._src!==x.name?`<span class="chip">${esc(x._src)}</span>`:""}<span class="d">${esc(x.annotations?.title||desc.split(/[.:]/)[0])}</span>${x.annotations?.destructiveHint?`<span class="badge warn hide-m">can modify</span>`:x.annotations?.readOnlyHint?`<span class="badge hide-m">read-only</span>`:""}</div>
+    ${open===x.name?`<div class="tool-b"><p class="muted" style="margin:0 0 14px;max-width:820px;font-size:13px;white-space:pre-wrap">${esc(desc)}</p>${acts.length?`<div style="display:flex;gap:4px;flex-wrap:wrap;margin-bottom:14px">${acts.map(a=>`<span class="chip">${esc(a)}</span>`).join("")}</div>`:""}<div class="card tbl-wrap" style="background:var(--bg)">${schemaRows(x.inputSchema)}</div>${x._src!=="built-in"?`<div style="margin-top:12px"><a class="link" href="#plugins/${esc(x._src)}">Configure the ${esc(x._src)} plugin →</a></div>`:""}</div>`:""}</div>`}).join("")}</div>`).join(""):`<div class="card empty">Nothing matches “${esc(S.ui.toolQ)}”</div>`);
+};
+
+/* plugins */
+function parseEnv(text){
+  const lines=text.split(/\r?\n/);let a=lines.findIndex(l=>/^\s*\[env\]\s*$/.test(l));
+  if(a<0)return{lines,a:-1,b:-1,vars:[],notes:[]};
+  let b=a+1;while(b<lines.length&&!/^\s*\[/.test(lines[b]))b++;
+  const vars=[],notes=[];let pend=[];
+  for(let i=a+1;i<b;i++){const l=lines[i];if(!l.trim()){if(pend.length){notes.push(...pend);pend=[]}continue}
+    const m=l.match(/^\s*(#\s*)?([A-Za-z_][A-Za-z0-9_]*)\s*=\s*(.*)$/);
+    if(m){let rest=m[3].trim(),val="",tail="";
+      if(rest[0]==='"'){let j=1;while(j<rest.length&&!(rest[j]==='"'&&rest[j-1]!=="\\"))j++;try{val=JSON.parse(rest.slice(0,j+1))}catch{val=rest.slice(1,j)}tail=rest.slice(j+1)}
+      else if(rest[0]==="'"){const j=rest.indexOf("'",1);val=rest.slice(1,j<0?undefined:j);tail=j<0?"":rest.slice(j+1)}
+      else{const j=rest.indexOf("#");val=(j<0?rest:rest.slice(0,j)).trim();tail=j<0?"":rest.slice(j)}
+      tail=tail.replace(/^\s*#?\s*/,"").trim();
+      vars.push({key:m[2],val:String(val),on:!m[1],hints:pend.map(x=>x.replace(/^\s*#\s?/,"")),tail});pend=[]}
+    else if(/^\s*#/.test(l))pend.push(l);else pend.push("# "+l)}
+  notes.push(...pend);return{lines,a,b,vars,notes};
+}
+function tomlStr(v){return v.includes("'")||/[\n\r]/.test(v)?JSON.stringify(v):`'${v}'`}
+function buildEnv(text,vars){
+  const p=parseEnv(text);const body=[];
+  for(const v of vars){if(!v.key)continue;for(const h of v.hints)body.push("# "+h);body.push(`${v.on?"":"# "}${v.key} = ${tomlStr(v.val)}${v.tail?"   # "+v.tail:""}`)}
+  if(p.a<0){const out=text.replace(/\s*$/,"");return out+"\n\n[env]\n"+body.join("\n")+"\n"}
+  const before=p.lines.slice(0,p.a+1),after=p.lines.slice(p.b);
+  return[...before,...body,...(p.notes.length?p.notes:[]),...(after.length?["",...after]:[""])].join("\n").replace(/\n{3,}/g,"\n\n");
+}
+const secretKey=k=>/TOKEN|SECRET|PASSWORD|API_?KEY|AUTH/i.test(k);
+function opts(tail){const m=tail&&tail.split("|").map(s=>s.trim().split(/\s/)[0]).filter(Boolean);return m&&m.length>1?m:null}
+
+V.plugins=()=>{
+  const st=S.state?.status;if(!st)return"";
+  if(S.arg)return pluginDetail(S.arg);
+  const plugs=st.plugins||[];
+  return pageHead("Plugins","Extra tools loaded from <span class=\"mono\">plugins/</span>. Edit a plugin's files and it reloads by itself in about a second.",
+    `<button class="btn" data-newplugin>${I("plus")}New plugin</button>`)+
+  `<div class="grid g3">${plugs.map(p=>`<div class="card pcard" data-go="plugins/${esc(p.name)}" tabindex="0">
+     <div class="row"><div class="plug-ico">${esc(p.name.slice(0,2))}</div><div style="flex:1;min-width:0"><div style="font-weight:600">${esc(p.name)}</div><div class="faint mono" style="font-size:11.5px">v${esc(p.version||"?")}${p.pid?` · pid ${p.pid}`:""}</div></div>${stateBadge(p.state)}</div>
+     <div class="d">${esc(p.description)}</div>
+     ${p.error?`<div class="err-box" style="max-height:60px;overflow:hidden">${esc(p.error)}</div>`:""}
+     <div class="row" style="margin-top:auto"><div class="row wrap" style="gap:4px;flex:1">${(p.tools||[]).map(t=>`<span class="chip">${esc(t)}</span>`).join("")||`<span class="faint" style="font-size:12px">no tools</span>`}</div><span class="faint" style="font-size:12px">${p.restarts?`${p.restarts} reloads`:""}</span></div>
+   </div>`).join("")}</div>`;
+};
+function pluginDetail(name){
+  const sum=(S.state.status.plugins||[]).find(p=>p.name===name);const info=S.ui.pinfo?.[name];
+  if(!sum)return`<div class="card empty">No plugin “${esc(name)}”. <a class="link" href="#plugins">Back to plugins</a></div>`;
+  if(!info){loadPlugin(name);return`<div class="empty">Loading ${esc(name)}…</div>`}
+  const tab=S.ui.ptab||"settings";const enabled=sum.state!=="disabled";
+  const head=`<div class="page-h"><div class="row" style="gap:14px"><button class="btn icon" data-go="plugins" aria-label="Back">${I("back")}</button><div class="plug-ico" style="width:42px;height:42px">${esc(name.slice(0,2))}</div><div><h2>${esc(name)}</h2><p>${esc(sum.description)}</p></div></div><span class="sp"></span>
+   <div class="row">${stateBadge(sum.state)}<label class="row" style="gap:8px;font-size:13px;color:var(--tx2)"><span class="switch"><input type="checkbox" data-ptoggle="${esc(name)}" ${enabled?"checked":""} aria-label="Enabled"><span></span></span>Enabled</label><button class="btn" data-act="plugin_reload" data-name="${esc(name)}">${I("refresh")}Reload</button></div></div>`;
+  const tabs=`<div class="tabs">${[["settings","Settings"],["tools","Tools · "+(sum.tools||[]).length],["manifest","plugin.toml"],["logs","Logs"]].map(([k,t])=>`<button data-ptab="${k}" class="${tab===k?"on":""}">${t}</button>`).join("")}</div>`;
+  let body="";
+  if(tab==="settings"){
+    const vars=S.ui.penv?.[name]??parseEnv(info.manifest).vars;(S.ui.penv??={})[name]=vars;
+    body=`${sum.error?`<div class="err-box" style="margin-bottom:16px">${esc(sum.error)}</div>`:""}
+    <div class="grid cols-main" id="psplit">
+     <div class="card"><div class="card-h"><h3>Environment</h3><span class="faint hide-m" style="font-size:12px">passed to the plugin process · switched off = commented out</span><span class="sp"></span><button class="btn sm" data-envadd>${I("plus")}Variable</button></div>
+      <div class="card-b" style="padding-top:4px;padding-bottom:4px">${vars.length?vars.map((v,i)=>{const o=opts(v.tail);const sec=secretKey(v.key);return`<div class="env-row ${v.on?"":"off"}">
+        <span class="switch" style="margin-top:6px"><input type="checkbox" data-envon="${i}" ${v.on?"checked":""} aria-label="Use ${esc(v.key)}"><span></span></span>
+        <div>${v.isNew?`<input class="inp mono" style="width:100%" data-envkey="${i}" value="${esc(v.key)}" placeholder="NAME">`:`<div class="key">${esc(v.key)}</div>`}</div>
+        <div class="val"><div class="row" style="gap:6px"><input class="inp mono" style="flex:1" data-envval="${i}" value="${esc(v.val)}" ${sec?`type="password"`:""} ${o?`list="dl${i}"`:""} placeholder="value">${sec?`<button class="btn icon" data-reveal="${i}" aria-label="Show value">${I("eye")}</button>`:""}</div>${o?`<datalist id="dl${i}">${o.map(x=>`<option value="${esc(x)}">`).join("")}</datalist>`:""}
+          ${v.hints.length||v.tail?`<div class="hint">${v.hints.map(esc).join("<br>")}${v.hints.length&&v.tail?"<br>":""}${v.tail?esc(v.tail):""}</div>`:""}</div>
+        <button class="btn icon ghost" data-envdel="${i}" aria-label="Remove">${I("x")}</button></div>`}).join(""):`<div class="empty">This plugin has no settings. Add a variable if it reads one.</div>`}</div>
+      <div class="row" style="padding:14px 18px;border-top:1px solid var(--line)"><span class="faint" style="font-size:12px">Saving rewrites the <span class="mono">[env]</span> block and restarts the plugin.</span><span class="sp"></span><button class="btn" data-envreset>Discard</button><button class="btn pri" data-envsave="${esc(name)}">${I("save")}Save</button></div></div>
+     <div class="card"><div class="card-h"><h3>Details</h3></div><div class="card-b"><dl class="kv" style="grid-template-columns:90px 1fr">
+      <dt>Version</dt><dd class="mono">${esc(sum.version)}</dd><dt>State</dt><dd>${esc(sum.state)}</dd><dt>PID</dt><dd class="mono">${sum.pid??"—"}</dd><dt>Loaded</dt><dd>${sum.loaded?ago(sum.loaded):"—"}</dd><dt>Reloads</dt><dd>${sum.restarts}</dd><dt>Folder</dt><dd class="mono copy" data-copy="${esc(sum.dir)}" title="Copy path" style="font-size:11.5px">${esc(sum.dir)}</dd></dl></div></div>
+    </div>`;
+  }else if(tab==="tools"){
+    const defs=(S.tools?.plugins||[]).filter(t=>(sum.tools||[]).includes(t.name));
+    body=defs.length?defs.map(x=>`<div class="card" style="margin-bottom:16px"><div class="card-h"><span class="mono" style="font-weight:600">${esc(x.name)}</span><span class="sp"></span><a class="link" href="#tools/${esc(x.name)}">Open in Tools</a></div><div class="card-b"><p class="muted" style="margin:0 0 14px;font-size:13px;white-space:pre-wrap">${esc(String(x.description).replace(/^\[plugin [^\]]+\]\s*/,""))}</p><div class="card tbl-wrap" style="background:var(--bg)">${schemaRows(x.inputSchema)}</div></div></div>`).join(""):`<div class="card empty">The plugin exposes no tools right now${sum.state!=="running"?" (it is not running)":""}.</div>`;
+  }else if(tab==="manifest"){
+    body=`<div class="stack"><textarea class="code" id="mtext" spellcheck="false">${esc(info.manifest)}</textarea><div class="row"><span class="faint mono" style="font-size:12px">${esc(info.manifest_path)}</span><span class="sp"></span><button class="btn pri" data-msave="${esc(name)}">${I("save")}Save plugin.toml</button></div></div>`;
+  }else{
+    body=`<div class="row" style="margin-bottom:12px"><span class="faint" style="font-size:12px">stderr and log messages · last 200 lines</span><span class="sp"></span><button class="btn sm" data-preload="${esc(name)}">${I("refresh")}Refresh</button></div><pre class="pre" id="plog">${hlLog(info.log||"(empty)")}</pre>`;
+  }
+  return head+tabs+body;
+}
+async function loadPlugin(name){try{const j=await api(`/api/plugin?name=${encodeURIComponent(name)}`);(S.ui.pinfo??={})[name]=j;if(S.ui.penv)delete S.ui.penv[name];render()}catch(e){toast(e.message,true)}}
+
+/* skills */
+async function skillsCall(args,quiet=true){const j=await act("skills",{args},quiet);return j}
+async function loadSkills(){const j=await skillsCall({action:"index"});if(j.ok){try{S.skills=JSON.parse(j.text)}catch{S.skills={skills:[],root:""}}}else S.skills={skills:[],root:"",error:j.message};render()}
+async function openSkill(name){const j=await skillsCall({action:"source",name});if(j.ok){S.ui.skill=JSON.parse(j.text);S.ui.skillDirty=false;render()}}
+const NEW_SKILL=`---
+name: my-skill
+description: What this skill does and when to use it. Put the words someone would actually type, e.g. "render a blender scene", "cut a trailer".
+---
+
+# My skill
+
+## When to use
+
+## Steps
+
+1.
+
+## Pitfalls
+
+## Checks
+`;
+V.skills=()=>{
+  if(!S.skills){loadSkills();return`<div class="empty">Loading skills…</div>`}
+  const all=S.skills.skills||[];const q=(S.ui.skQ||"").toLowerCase();
+  const list=all.filter(s=>!q||s.name.includes(q)||s.description.toLowerCase().includes(q));
+  const cur=S.ui.skill;const want=S.arg;
+  if(want&&want!=="new"&&(!cur||cur.name!==want)&&!S.ui.skLoading){S.ui.skLoading=true;openSkill(want).finally(()=>S.ui.skLoading=false)}
+  const isNew=want==="new";
+  let right;
+  if(isNew){right=`<div class="card"><div class="card-h"><h3>New skill</h3><span class="sp"></span><button class="btn" data-go="skills">Cancel</button><button class="btn pri" data-sksave="new">${I("save")}Create</button></div><div class="card-b"><textarea class="code" id="sktext" spellcheck="false" style="min-height:520px">${esc(S.ui.newSkill||NEW_SKILL)}</textarea><div class="faint" style="font-size:12px;margin-top:8px">The <span class="mono">name</span> in the header becomes the folder name: lowercase words joined by hyphens.</div></div></div>`}
+  else if(cur&&cur.name===want){const total=cur.success+cur.fail;
+    right=`<div class="card"><div class="card-h" style="flex-wrap:wrap"><div style="min-width:0"><h3 class="mono">${esc(cur.name)}</h3></div>${cur.readonly?`<span class="badge warn">read-only</span>`:""}<span class="sp"></span>
+      ${!cur.readonly?`<button class="btn danger" data-skdel="${esc(cur.name)}">${I("trash")}Delete</button>`:""}<button class="btn pri" data-sksave="${esc(cur.name)}" ${cur.readonly?"disabled":""}>${I("save")}Save</button></div>
+      <div class="card-b stack">
+       <div class="row wrap" style="gap:18px;font-size:12.5px"><span class="muted">${I("eye","ico")} read ${cur.uses}×</span><span class="muted">${total?`${cur.success}/${total} worked`:"not rated yet"}</span><span class="muted">${cur.lines} lines</span>${cur.updated?`<span class="muted">updated ${esc(cur.updated)}</span>`:""}<span class="sp"></span><span class="faint mono copy" data-copy="${esc(cur.dir)}" style="font-size:11.5px">${esc(cur.dir)}</span></div>
+       <textarea class="code" id="sktext" spellcheck="false" style="min-height:520px" ${cur.readonly?"readonly":""}>${esc(cur.text)}</textarea>
+       ${cur.files.length?`<div><div class="faint" style="font-size:12px;margin-bottom:6px">Attached files</div><div class="row wrap" style="gap:6px">${cur.files.map(f=>`<span class="chip">${esc(f.path)} · ${bytes(f.size)}</span>`).join("")}</div></div>`:""}
+      </div></div>`}
+  else right=`<div class="card empty" style="padding:80px 20px"><div style="font-size:15px;color:var(--tx);margin-bottom:6px">Pick a skill to read or edit</div>Skills are SKILL.md playbooks an AI reads before a task and updates after it.</div>`;
+  return pageHead("Skills",`Know-how the AI reuses between tasks. Stored in <span class="mono copy" data-copy="${esc(S.skills.root)}">${esc(S.skills.root||"…")}</span>.`,
+    `<button class="btn" data-skinstall>${I("download")}Install from GitHub</button><button class="btn pri" data-go="skills/new">${I("plus")}New skill</button>`)+
+  (S.skills.error?`<div class="err-box" style="margin-bottom:16px">${esc(S.skills.error)}</div>`:"")+
+  `<div class="split"><div class="card"><div style="padding:10px;border-bottom:1px solid var(--line)"><input class="inp" id="skQ" placeholder="Filter ${all.length} skills" value="${esc(S.ui.skQ||"")}" style="width:100%"></div><div class="sk-list">
+   ${list.map(s=>`<div class="sk-item ${want===s.name?"on":""}" data-go="skills/${esc(s.name)}"><div class="n">${esc(s.name)}${s.readonly?`<span class="chip">ro</span>`:""}<span class="sp"></span><span class="faint mono" style="font-size:11px">${s.uses?s.uses+"×":""}</span></div><div class="d">${esc(s.description)}</div></div>`).join("")||`<div class="empty">No skills</div>`}
+  </div></div><div>${right}</div></div>`;
+};
+
+V.access=()=>{
+  const d=S.state;if(!d)return"";const st=d.status;
+  const tok=S.ui.newToken;
+  return pageHead("Access","Who can reach this machine. Local clients on 127.0.0.1 need no sign-in; everything through the tunnel does.")+
+  `<div class="grid g2" style="align-items:start">
+   <div class="card"><div class="card-h">${I("shield")}<h3>PIN</h3><span class="sp"></span>${st.auth.pin_set?`<span class="badge ok">set</span>`:`<span class="badge bad">not set</span>`}</div>
+    <div class="card-b stack" style="gap:12px"><div class="muted" style="font-size:13px">Remote clients type this PIN once on the nerve sign-in page. Without a PIN nobody can sign in from outside.</div>
+    <div class="row"><input class="inp" type="password" id="pin" placeholder="New PIN, at least 4 characters" style="flex:1" autocomplete="new-password"><button class="btn pri" data-pinset>Change PIN</button></div></div></div>
+   <div class="card"><div class="card-h">${I("key")}<h3>API tokens</h3><span class="sp"></span><span class="faint" style="font-size:12px">for scripts and CI</span></div>
+    <div class="card-b stack" style="gap:12px">
+     ${tok?`<div style="padding:12px;border-radius:8px;background:var(--acc-soft)"><div style="font-size:12px;margin-bottom:6px;color:var(--acc)">Copy it now — it won't be shown again</div><div class="urlbox"><code>${esc(tok)}</code><button class="btn sm" data-copy="${esc(tok)}">${I("copy")}Copy</button></div></div>`:""}
+     <div class="row"><input class="inp" id="tokname" placeholder="Token name, e.g. ci" style="flex:1"><button class="btn" data-tokcreate>${I("plus")}Create</button></div>
+     ${d.tokens.length?`<div class="card" style="background:var(--bg)">${d.tokens.map(t=>`<div class="list-item"><div style="flex:1"><div style="font-weight:500">${esc(t.name)}</div><div class="faint" style="font-size:12px">created ${when(t.created)} · used ${ago(t.last_used)}</div></div><button class="btn sm danger" data-act="token_revoke" data-id="${esc(t.id)}" data-confirm="Revoke token ${esc(t.name)}?">Revoke</button></div>`).join("")}</div>`:`<div class="faint" style="font-size:13px">No tokens yet.</div>`}
+    </div></div>
+  </div>
+  <div class="card" style="margin-top:16px"><div class="card-h"><h3>OAuth clients</h3><span class="faint" style="font-size:12px">${d.clients.length} registered</span><span class="sp"></span>${d.clients.length?`<button class="btn sm danger" data-act="clients_revoke_all" data-confirm="Sign out every OAuth client? They will need the PIN again.">Revoke all</button>`:""}</div>
+   <div class="tbl-wrap"><table><thead><tr><th>Client</th><th class="hide-m">Redirect</th><th>Registered</th><th>Last used</th><th></th></tr></thead><tbody>
+   ${d.clients.length?[...d.clients].sort((a,b)=>ms(b.last_used||b.created)-ms(a.last_used||a.created)).map(c=>`<tr><td><div style="font-weight:500">${esc(c.name||"unnamed")}</div><div class="mono faint">${esc(c.id)}</div></td><td class="hide-m"><div class="mono muted clip" style="max-width:300px">${esc(c.redirect)}</div></td><td class="muted">${when(c.created)}</td><td class="muted">${ago(c.last_used)}</td><td class="r"><button class="btn sm danger" data-act="client_revoke" data-id="${esc(c.id)}" data-confirm="Revoke ${esc(c.name||c.id)}?">Revoke</button></td></tr>`).join(""):`<tr><td colspan="5" class="empty">No clients have signed in yet</td></tr>`}
+   </tbody></table></div></div>`;
+};
+
+V.logs=()=>{
+  const u=S.ui;u.logKind??="nerve";u.logN??=300;
+  return pageHead("Logs","",`<div class="seg">${[["nerve","Server"],["tunnel","Tunnel"]].map(([k,t])=>`<button data-logkind="${k}" class="${u.logKind===k?"on":""}">${t}</button>`).join("")}</div>
+   <input class="inp" id="logGrep" placeholder="Filter (regex)" value="${esc(u.logGrep||"")}" style="width:200px">
+   <select class="inp" id="logN">${[100,300,1000,3000].map(n=>`<option ${u.logN==n?"selected":""}>${n}</option>`).join("")}</select>
+   <label class="row" style="gap:8px;font-size:13px;color:var(--tx2)"><span class="switch"><input type="checkbox" id="logFollow" ${u.logFollow!==false?"checked":""}><span></span></span>Follow</label>`)+
+  `<pre class="pre" id="logbox" style="max-height:calc(100vh - 210px);min-height:400px">${hlLog(u.logText??"loading…")}</pre>`;
+};
+async function loadLog(){const u=S.ui;try{const r=await fetch(`/api/log?kind=${u.logKind||"nerve"}&n=${u.logN||300}&grep=${encodeURIComponent(u.logGrep||"")}`,{cache:"no-store"});u.logText=await r.text();const b=$("#logbox");if(b){const atEnd=b.scrollTop+b.clientHeight>=b.scrollHeight-30;b.innerHTML=hlLog(u.logText||"(empty)");if(u.logFollow!==false&&atEnd)b.scrollTop=b.scrollHeight}}catch{}}
+
+V.settings=()=>{
+  const st=S.state?.status;if(!st)return"";const c=S.ui.cfg;
+  if(!c){api("/api/config").then(j=>{S.ui.cfg=j;render()}).catch(e=>toast(e.message,true))}
+  return pageHead("Settings","Server configuration. Changes here apply after a restart, which takes about a second and keeps jobs and the tunnel alive.",
+   `<button class="btn" data-act="tunnel_restart">${I("globe")}Restart tunnel</button><button class="btn" data-act="restart" data-confirm="Restart nerve now?">${I("power")}Restart nerve</button>`)+
+  `<div class="grid cols-side" id="setsplit">
+   <div class="card"><div class="card-h"><h3 class="mono">config.toml</h3><span class="sp"></span><button class="btn pri" data-cfgsave>${I("save")}Save</button></div><div class="card-b">${c?`<textarea class="code" id="cfgtext" spellcheck="false" style="min-height:560px">${esc(c.text)}</textarea><div class="faint mono" style="font-size:12px;margin-top:8px">${esc(c.path)} · the previous version is kept as config.toml.bak</div>`:`<div class="empty">Loading…</div>`}</div></div>
+   <div class="stack">
+    <div class="card"><div class="card-h"><h3>Updates</h3></div><div class="card-b stack" style="gap:12px"><div><a class="link" href="https://github.com/EFSEEaXZ/nerve/releases" target="_blank" rel="noopener">EFSEEaXZ/nerve</a><div class="muted" style="font-size:13px;margin-top:6px">Stable GitHub releases. SHA-256 verified before installation.</div></div><div class="muted">${st.updates?.automatic?"Automatic updates on":"Automatic updates off"}</div><div role="status">${esc(st.updates?.message||"Not checked yet")}${st.updates?.checked_at?`<div class="faint" style="font-size:13px;margin-top:4px">Checked ${ago(st.updates.checked_at)}</div>`:""}</div><div class="row wrap"><button class="btn" data-upcheck ${st.updates?.busy?"disabled":""}>${I("refresh")}Check updates</button><button class="btn pri" data-update ${!st.updates?.available||st.updates?.busy?"disabled":""}>${I("download")}Update</button></div></div></div>
+    <div class="card"><div class="card-h"><h3>Paths</h3></div><div class="card-b"><dl class="kv" style="grid-template-columns:70px 1fr;font-size:12px">${[["Data",st.data_dir],["Binary",st.exe],["Workdir",st.default_dir]].map(([k,v])=>`<dt>${k}</dt><dd class="mono copy" data-copy="${esc(v)}" title="Copy">${esc(v)}</dd>`).join("")}</dl></div></div>
+   </div></div>`;
+};
+
+/* ---------- job drawer ---------- */
+let drawerTimer=null;
+async function openJob(id){
+  const j=S.state?.jobs.find(x=>x.id===id);if(!j)return;S.ui.job=id;S.ui.jobStream=S.ui.jobStream||"job";
+  const draw=async()=>{const job=S.state?.jobs.find(x=>x.id===id)||j;let text="";try{const r=await fetch(`/api/log?kind=${S.ui.jobStream}&id=${encodeURIComponent(id)}&n=500`,{cache:"no-store"});text=await r.text()}catch{}
+    if(S.ui.job!==id)return;const box=$("#jlog");const keep=box&&box.scrollTop+box.clientHeight>=box.scrollHeight-30;
+    $("#layer").innerHTML=`<div class="ovl" data-close style="padding:0;background:rgba(0,0,0,.35)"></div><aside class="drawer" role="dialog" aria-modal="true" aria-label="Job ${esc(id)}"><div class="card-h"><div style="min-width:0;flex:1"><div class="row">${jobBadge(job)}<span class="mono faint">${esc(id)}</span></div><div class="mono clip" style="margin-top:6px;max-width:100%">${esc(job.command)}</div></div>${job.running?`<button class="btn danger" data-act="job_kill" data-id="${esc(id)}">${I("stop")}Stop</button>`:""}<button class="btn icon ghost" data-close aria-label="Close">${I("x")}</button></div>
+     <div class="body"><dl class="kv" style="grid-template-columns:90px 1fr;margin-bottom:18px"><dt>Label</dt><dd>${esc(job.label||"—")}</dd><dt>PID</dt><dd class="mono">${job.pid}</dd><dt>Started</dt><dd>${when(job.started)} · ${ago(job.started)}</dd><dt>Duration</dt><dd>${dur(job.elapsed_ms)}</dd></dl>
+     <div class="row" style="margin-bottom:10px"><div class="seg"><button data-stream="job" class="${S.ui.jobStream==="job"?"on":""}">stdout</button><button data-stream="job_err" class="${S.ui.jobStream==="job_err"?"on":""}">stderr</button></div></div>
+     <pre class="pre" id="jlog" style="max-height:none;min-height:300px">${hlLog(text||"(no output)")}</pre></div></aside>`;
+    const nb=$("#jlog");if(nb&&(keep||!box))nb.scrollTop=nb.scrollHeight};
+  clearInterval(drawerTimer);await draw();drawerTimer=setInterval(()=>{if(S.ui.job===id)draw();else clearInterval(drawerTimer)},2000);
+}
+let layerOpener=null;
+function closeLayer(){S.ui.job=null;clearInterval(drawerTimer);$("#layer").innerHTML="";if(layerOpener?.isConnected)layerOpener.focus();layerOpener=null}
+
+/* ---------- modal ---------- */
+function modal(title,bodyHtml,okLabel,onOk){
+  layerOpener=document.activeElement;
+  $("#layer").innerHTML=`<div class="ovl" data-close><div class="modal" role="dialog" aria-modal="true" aria-label="${esc(title)}"><div class="card-h"><h3>${esc(title)}</h3><span class="sp"></span><button class="btn icon ghost sm" data-close aria-label="Close">${I("x")}</button></div><div class="card-b">${bodyHtml}</div><div class="foot"><button class="btn" data-close>Cancel</button><button class="btn pri" id="mok">${esc(okLabel)}</button></div></div></div>`;
+  const f=$("#layer input");f&&f.focus();
+  const dialog=$("#layer .modal"),submit=$("#mok");
+  submit.onclick=async()=>{submit.disabled=true;try{const r=await onOk();if(!dialog.isConnected)return;if(r!==false)closeLayer();else submit.disabled=false}catch(e){if(dialog.isConnected){submit.disabled=false;toast(e.message||"Install failed",true)}}};
+  $("#layer").querySelectorAll("input").forEach(i=>i.addEventListener("keydown",e=>{if(e.key==="Enter")$("#mok").click()}));
+}
+function confirmBox(text,ok){modal("Are you sure?",`<div class="muted">${esc(text)}</div>`,"Confirm",ok)}
+
+/* ---------- command palette ---------- */
+function palItems(){
+  const st=S.state?.status;const it=ROUTES.map(r=>({t:r.t,i:r.i,k:"Go to",run:()=>go(r.id)}));
+  it.push({t:"Restart nerve",i:"power",k:"Action",run:()=>act("restart")},{t:"Restart tunnel",i:"globe",k:"Action",run:()=>act("tunnel_restart")},{t:"Toggle theme",i:"sun",k:"Action",run:toggleTheme},{t:"New skill",i:"plus",k:"Action",run:()=>go("skills","new")});
+  if(st?.public_url)it.push({t:"Copy public MCP URL",i:"copy",k:"Action",run:()=>copy(st.public_url.replace(/\/$/,"")+"/mcp","MCP URL copied")});
+  for(const p of st?.plugins||[])it.push({t:p.name,i:"plug",k:"Plugin",run:()=>go("plugins",p.name)});
+  for(const s of S.skills?.skills||[])it.push({t:s.name,i:"book",k:"Skill",run:()=>go("skills",s.name)});
+  for(const n of st?.tools||[])it.push({t:n,i:"tool",k:"Tool",run:()=>{S.ui.toolOpen=n;go("tools",n)}});
+  return it;
+}
+function openPal(){
+  layerOpener=document.activeElement;
+  let sel=0,items=palItems(),shown=items;
+  $("#layer").innerHTML=`<div class="ovl" data-close><div class="pal" role="dialog" aria-modal="true" aria-label="Command palette"><input id="palq" placeholder="Type a page, plugin, skill, tool or action" autocomplete="off"><div class="res" id="palr"></div></div></div>`;
+  const q=$("#palq"),r=$("#palr");
+  const draw=()=>{const s=q.value.toLowerCase().trim();shown=items.filter(x=>!s||x.t.toLowerCase().includes(s)||x.k.toLowerCase().includes(s)).slice(0,40);sel=Math.min(sel,Math.max(0,shown.length-1));
+    r.innerHTML=shown.map((x,i)=>`<div class="it ${i===sel?"on":""}" data-i="${i}">${I(x.i)}<span>${esc(x.t)}</span><span class="t">${x.k}</span></div>`).join("")||`<div class="empty">Nothing found</div>`;
+    r.querySelector(".on")?.scrollIntoView({block:"nearest"})};
+  const run=i=>{const x=shown[i];if(!x)return;closeLayer();x.run()};
+  q.oninput=()=>{sel=0;draw()};
+  q.onkeydown=e=>{if(e.key==="ArrowDown"){sel=Math.min(sel+1,shown.length-1);draw();e.preventDefault()}else if(e.key==="ArrowUp"){sel=Math.max(sel-1,0);draw();e.preventDefault()}else if(e.key==="Enter"){run(sel)}else if(e.key==="Escape")closeLayer()};
+  r.onclick=e=>{const t=e.target.closest("[data-i]");if(t)run(+t.dataset.i)};
+  draw();q.focus();
+}
+
+/* ---------- theme ---------- */
+function applyTheme(){const t=document.documentElement.dataset.theme||(matchMedia("(prefers-color-scheme: light)").matches?"light":"dark");document.documentElement.dataset.theme=t;$("#theme").innerHTML=I(t==="light"?"moon":"sun")}
+function toggleTheme(){const t=document.documentElement.dataset.theme==="light"?"dark":"light";document.documentElement.dataset.theme=t;try{localStorage.setItem("nerve-theme",t)}catch{}applyTheme();act("theme",{text:t},true)}
+
+/* ---------- render + events ---------- */
+function render(){
+  renderNav();
+  const a=document.activeElement;const id=a&&a.id;const pos=a&&a.selectionStart;
+  const keepScroll=["mtext","cfgtext","sktext"].map(k=>[k,$("#"+k)?.scrollTop]);
+  $("#view").innerHTML=V[S.route]();
+  if(id){const n=document.getElementById(id);if(n&&n!==document.body){n.focus();try{n.setSelectionRange(pos,pos)}catch{}}}
+  for(const [k,t] of keepScroll){const n=$("#"+k);if(n&&t)n.scrollTop=t}
+  if(S.route==="logs")loadLog();
+}
+const editing=()=>{const a=document.activeElement;return a&&(a.tagName==="TEXTAREA"||(a.tagName==="INPUT"&&a.id!=="toolQ"&&a.id!=="skQ"))||S.ui.skillDirty||S.ui.envDirty||$("#layer").innerHTML}
+
+document.addEventListener("click",async e=>{
+  const t=e.target.closest("button,[data-go],[data-copy],[data-job],[data-tool],[data-close],a");if(!t)return;const ds=t.dataset;
+  if(ds.close!==undefined&&(e.target===t||t.tagName==="BUTTON")){closeLayer();return}
+  if(ds.copy){copy(ds.copy);return}
+  if(ds.go!==undefined&&!t.matches("input")){const [a,b]=ds.go.split("/");if(S.route==="skills"&&S.ui.skillDirty&&!confirm("Discard unsaved changes?"))return;S.ui.skillDirty=false;S.ui.envDirty=false;S.ui.ptab=a==="plugins"&&b?S.ui.ptab:"settings";go(a,b?decodeURIComponent(b):null);return}
+  if(ds.job&&!e.target.closest("button")){openJob(ds.job);return}
+  if(ds.tool){S.ui.toolOpen=S.ui.toolOpen===ds.tool?"__none":ds.tool;if(S.arg)history.replaceState(null,"","#tools");S.arg=null;render();return}
+  if(ds.ui){const [k,v]=ds.ui.split(":");S.ui[k]=v==="0"?false:v==="1"?true:v;render();return}
+  if(ds.act){const run=async()=>{const r=await act(ds.act,{id:ds.id,name:ds.name});await refresh();if(ds.act==="plugin_reload"&&ds.name)setTimeout(()=>loadPlugin(ds.name),800);if(S.ui.job)openJob(S.ui.job);return r.ok};
+    if(ds.confirm)confirmBox(ds.confirm,run);else run();return}
+  if(ds.stream){S.ui.jobStream=ds.stream;openJob(S.ui.job);return}
+  if(ds.logkind){S.ui.logKind=ds.logkind;S.ui.logText="loading…";render();return}
+  if(ds.ptab){S.ui.ptab=ds.ptab;if(ds.ptab==="logs"&&S.arg)loadPlugin(S.arg);render();return}
+  if(ds.preload){loadPlugin(ds.preload);return}
+  if(ds.reveal!==undefined){const i=$(`[data-envval="${ds.reveal}"]`);i.type=i.type==="password"?"text":"password";return}
+  if(ds.envadd!==undefined){S.ui.penv[S.arg].push({key:"",val:"",on:true,hints:[],tail:"",isNew:true});S.ui.envDirty=true;render();$(`[data-envkey="${S.ui.penv[S.arg].length-1}"]`)?.focus();return}
+  if(ds.envdel!==undefined){S.ui.penv[S.arg].splice(+ds.envdel,1);S.ui.envDirty=true;render();return}
+  if(ds.envreset!==undefined){delete S.ui.penv[S.arg];S.ui.envDirty=false;render();return}
+  if(ds.envsave){const name=ds.envsave;const vars=S.ui.penv[name];const bad=vars.find(v=>v.key&&!/^[A-Za-z_][A-Za-z0-9_]*$/.test(v.key));if(bad){toast(`“${bad.key}” is not a valid variable name`,true);return}
+    const text=buildEnv(S.ui.pinfo[name].manifest,vars);const r=await act("plugin_save",{name,text});if(r.ok){S.ui.envDirty=false;setTimeout(()=>{loadPlugin(name);refresh()},1500)}return}
+  if(ds.msave){const name=ds.msave;const r=await act("plugin_save",{name,text:$("#mtext").value});if(r.ok)setTimeout(()=>{loadPlugin(name);refresh()},1500);return}
+  if(ds.cfgsave!==undefined){const r=await act("config_save",{text:$("#cfgtext").value});if(r.ok){S.ui.cfg.text=$("#cfgtext").value}return}
+  if(ds.upcheck!==undefined){t.disabled=true;await act("update_check");await refresh();return}
+  if(ds.update!==undefined){t.disabled=true;await act("update");await refresh();return}
+  if(ds.pinset!==undefined){const p=$("#pin").value;const r=await act("pin_set",{pin:p});if(r.ok){$("#pin").value="";refresh()}return}
+  if(ds.tokcreate!==undefined){const n=$("#tokname").value.trim();const r=await act("token_create",{name:n});if(r.ok){S.ui.newToken=r.token;await refresh()}return}
+  if(ds.sksave){const text=$("#sktext").value;const isNew=ds.sksave==="new";const m=text.match(/^\s*---[\s\S]*?\bname:\s*["']?([^"'\n]+)/);
+    const r=await skillsCall({action:"save",body:text,overwrite:!isNew,...(isNew?{}:{name:ds.sksave})},false);
+    if(r.ok){S.ui.skillDirty=false;S.ui.newSkill=null;S.ui.skill=null;await loadSkills();const nm=(m&&m[1].trim())||ds.sksave;go("skills",nm)}return}
+  if(ds.skdel){const n=ds.skdel;confirmBox(`Delete skill ${n}? It is moved to the .trash folder, not erased.`,async()=>{const r=await skillsCall({action:"delete",name:n},false);if(r.ok){S.ui.skill=null;await loadSkills();go("skills")}return r.ok});return}
+  if(ds.skinstall!==undefined){modal("Install skills",`<div class="field"><label for="srcu">GitHub URL, local folder or .zip</label><input class="inp mono" id="srcu" placeholder="https://github.com/anthropics/skills/tree/main/skills/pptx"></div><div class="faint" style="font-size:12px">A repo with many skills installs all of them. Existing skills are skipped.</div>`,"Install",async()=>{const v=$("#srcu").value.trim();if(!v)return false;const r=await skillsCall({action:"install",source:v},false);if(r.ok)loadSkills();return r.ok});return}
+  if(ds.newplugin!==undefined){modal("New plugin",`<div class="field"><label for="pn">Name</label><input class="inp mono" id="pn" placeholder="my-tool"></div><div class="field"><label for="pd">What it does</label><input class="inp" id="pd" placeholder="One line, shown to the AI"></div><div class="faint" style="font-size:12px">Creates a Python plugin from the template. Edit its <span class="mono">server.py</span> and nerve reloads it.</div>`,"Create",async()=>{const n=$("#pn").value.trim();if(!/^[a-z0-9][a-z0-9_-]*$/.test(n)){toast("Use lowercase letters, digits, - and _",true);return false}const r=await act("plugin_new",{name:n,text:$("#pd").value.trim()});if(r.ok){await refresh();go("plugins",n)}return r.ok});return}
+});
+document.addEventListener("change",e=>{const t=e.target;
+  if(t.dataset.ptoggle){act(t.checked?"plugin_enable":"plugin_disable",{name:t.dataset.ptoggle}).then(()=>refresh());return}
+  if(t.dataset.envon!==undefined){S.ui.penv[S.arg][+t.dataset.envon].on=t.checked;S.ui.envDirty=true;render();return}
+  if(t.id==="logN"){S.ui.logN=+t.value;loadLog()}
+  if(t.id==="logFollow"){S.ui.logFollow=t.checked}
+});
+let gt;
+document.addEventListener("input",e=>{const t=e.target;
+  if(t.id==="toolQ"){S.ui.toolQ=t.value;render()}
+  else if(t.id==="skQ"){S.ui.skQ=t.value;render()}
+  else if(t.id==="sktext"){S.ui.skillDirty=true;if(S.arg==="new")S.ui.newSkill=t.value}
+  else if(t.dataset.envval!==undefined){S.ui.penv[S.arg][+t.dataset.envval].val=t.value;S.ui.envDirty=true}
+  else if(t.dataset.envkey!==undefined){S.ui.penv[S.arg][+t.dataset.envkey].key=t.value.trim();S.ui.envDirty=true}
+  else if(t.id==="logGrep"){S.ui.logGrep=t.value;clearTimeout(gt);gt=setTimeout(loadLog,300)}
+});
+document.addEventListener("keydown",e=>{
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="k"){e.preventDefault();openPal();return}
+  if((e.ctrlKey||e.metaKey)&&e.key.toLowerCase()==="s"){const b=$("[data-sksave],[data-msave],[data-cfgsave],[data-envsave]");if(b&&!b.disabled){e.preventDefault();b.click()}return}
+  if(e.key==="Escape"&&$("#layer").innerHTML){e.preventDefault();closeLayer();return}
+  if(e.key==="Tab"){
+    const d=$("#layer [role=dialog]");if(d){const f=[...d.querySelectorAll('button:not(:disabled),input:not(:disabled),select,textarea,a[href],[tabindex="0"]')].filter(e=>e.getClientRects().length);const first=f[0],last=f[f.length-1];if(f.length&&((e.shiftKey&&document.activeElement===first)||(!e.shiftKey&&document.activeElement===last)||!d.contains(document.activeElement))){e.preventDefault();(e.shiftKey?last:first).focus()}}
+  }
+  if(e.key==="Enter"&&e.target.classList?.contains("pcard"))e.target.click();
+  if(e.key==="Tab"&&e.target.id&&["sktext","mtext","cfgtext"].includes(e.target.id)){e.preventDefault();const t=e.target,s=t.selectionStart;t.setRangeText("  ",s,t.selectionEnd,"end");t.dispatchEvent(new Event("input",{bubbles:true}))}
+});
+window.addEventListener("hashchange",()=>{parseHash();if(S.route!=="tools")S.ui.toolOpen=null;closeLayer();render();window.scrollTo(0,0)});
+window.addEventListener("beforeunload",e=>{if(S.ui.skillDirty||S.ui.envDirty){e.preventDefault();e.returnValue=""}});
+
+let refreshing=false;
+async function refresh(){
+  if(refreshing)return; refreshing=true;
+  try{
+  try{S.state=await api("/api/state");S.offline=false}catch{S.offline=true}
+  if(!S.tools||S.ui.toolsAt!==(S.state?.status.tools||[]).join()){try{S.tools=await api("/api/tools");S.ui.toolsAt=(S.state?.status.tools||[]).join()}catch{}}
+  if(editing())renderNav();else render();
+  }finally{refreshing=false}
+}
+$("#logo").innerHTML=LOGO;$("#sIco").innerHTML=I("search");$("#mnav").innerHTML=I("menu");
+$("#mnav").onclick=openPal;$("#openPal").onclick=openPal;$("#theme").onclick=toggleTheme;
+applyTheme();act("theme",{text:document.documentElement.dataset.theme},true);parseHash();render();refresh();loadSkills();
+setInterval(()=>{if(!document.hidden)refresh()},3000);
+setInterval(()=>{if(!document.hidden&&S.route==="logs"&&S.ui.logFollow!==false)loadLog()},2500);
+</script>
+</body>
+</html>

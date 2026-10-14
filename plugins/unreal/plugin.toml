@@ -1,0 +1,10 @@
+# Bundled with nerve. Edit freely: once you change a file, nerve stops updating it.
+name = "unreal"
+version = "1.0.0"
+description = "Unreal Editor: projects, live editor control over a Python bridge, actors, levels, PIE, screenshots"
+command = ["python", "-u", "server.py"]
+
+[env]
+# UNREAL_ENGINE_ROOT = 'C:\Program Files\Epic Games\UE_5.8'   # default: newest installed engine
+# UNREAL_PROJECTS = 'D:\Games\UE'                             # extra folders with projects
+NERVE_UNREAL_PORT = "9877"

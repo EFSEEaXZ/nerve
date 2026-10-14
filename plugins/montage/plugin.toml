@@ -1,0 +1,14 @@
+# Bundled with nerve. Edit freely: once you change a file, nerve stops updating it.
+name = "montage"
+version = "1.0.0"
+description = "Video editing: real SFX/music (Freesound, Jamendo, your library), footage/audio analysis, timeline render with pro mixing, captions, OTIO export"
+command = ["python", "-u", "server.py"]
+timeout_ms = 900000
+
+[env]
+# Free key: https://freesound.org/apiv2/apply  -> better ranking (ratings/downloads) and more results
+# FREESOUND_TOKEN = ""
+# Your own SFX/music packs (Sonniss GDC bundles, purchased packs...), separated by ';'
+# NERVE_MEDIA_DIRS = 'D:\SFX;D:\Music'
+# WHISPER_MODEL = "small"      # tiny | base | small | medium | large-v3 | turbo
+# WHISPER_DEVICE = "auto"      # auto | cuda | cpu

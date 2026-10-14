@@ -1,0 +1,45 @@
+name: Release
+on:
+  push:
+    tags: ['v*']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Verify tag and credentials
+        shell: pwsh
+        run: |
+          if ($env:GITHUB_REF_TYPE -ne 'tag') { throw 'Run this workflow on a version tag' }
+          $version = (Get-Content Cargo.toml | Select-String '^version = "([^"]+)"' | Select-Object -First 1).Matches.Groups[1].Value
+          if ($env:GITHUB_REF_NAME -ne "v$version") { throw 'Tag and Cargo version differ' }
+          python scripts/check_secrets.py
+          if ($LASTEXITCODE -ne 0) { exit $LASTEXITCODE }
+      - name: Unit tests
+        run: cargo test --locked
+      - name: Build
+        run: cargo build --release --locked
+      - name: MCP regression tests
+        run: python tests/run_ci.py target/release/nerve.exe
+      - name: Package
+        shell: pwsh
+        run: |
+          New-Item -ItemType Directory -Force dist/nerve-windows-x86_64 | Out-Null
+          Copy-Item target/release/nerve.exe dist/nerve-windows-x86_64.exe
+          Copy-Item target/release/nerve.exe dist/nerve-windows-x86_64/nerve.exe
+          Copy-Item README.md,LICENSE,SECURITY.md,config.example.toml dist/nerve-windows-x86_64/
+          Copy-Item src/assets/Onest-OFL.txt dist/nerve-windows-x86_64/
+          Copy-Item docs dist/nerve-windows-x86_64/docs -Recurse
+          Compress-Archive dist/nerve-windows-x86_64/* dist/nerve-windows-x86_64.zip
+          $lines = @('nerve-windows-x86_64.exe','nerve-windows-x86_64.zip') | ForEach-Object { "$((Get-FileHash dist/$_ -Algorithm SHA256).Hash.ToLower())  $_" }
+          [IO.File]::WriteAllText((Join-Path $PWD 'dist/SHA256SUMS.txt'), ($lines -join "`n")+"`n", [Text.UTF8Encoding]::new($false))
+      - name: Publish
+        shell: pwsh
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: gh release create $env:GITHUB_REF_NAME dist/nerve-windows-x86_64.exe dist/nerve-windows-x86_64.zip dist/SHA256SUMS.txt --verify-tag --title "nerve $env:GITHUB_REF_NAME" --notes-file RELEASE_NOTES.md

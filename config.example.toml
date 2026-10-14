@@ -1,0 +1,84 @@
+# nerve configuration. Restart nerve after editing.
+
+[server]
+# Fast JSON response grace; 0 keeps all accepted tool calls streamed over SSE.
+json_grace_ms = 250
+# Local listener: no auth, reachable only from this machine (Claude Desktop, Cursor, scripts).
+local_addr = "127.0.0.1:8100"
+# Public listener: OAuth + PIN (or API token) required. Tunnels point here. "" = disabled.
+public_addr = "127.0.0.1:8101"
+# Public base URL override, e.g. "https://pc.example.com". Empty = auto-detect.
+public_url = ""
+# Default dir for relative paths / commands. Empty = home dir.
+default_dir = ""
+
+[updates]
+# Stable GitHub Releases only; no custom update URL or embedded GitHub token.
+automatic = true
+check_interval_secs = 21600
+
+[auth]
+access_ttl_secs = 86400
+refresh_ttl_secs = 7776000
+local_requires_auth = false
+max_pin_failures = 5
+lockout_secs = 900
+
+[tunnel]
+# none | zrok | cloudflared | ngrok | tailscale | command
+# The tunnel process survives nerve restarts/updates (adopted on start), so the public URL stays up.
+provider = "none"
+# zrok v2: reserve a name once (`zrok2 create name <name>`) for a stable https://<name>.shares.zrok.io
+zrok_bin = ""                 # empty = <data>/tools/zrok2.exe, then PATH
+zrok_name = ""
+zrok_namespace = "public"
+cloudflared_bin = "cloudflared"
+# Named tunnel token => stable domain. Empty => quick tunnel with a random *.trycloudflare.com URL.
+cloudflared_token = ""
+ngrok_bin = "ngrok"
+# Static domain (free ngrok accounts get one), e.g. "my-pc.ngrok-free.app"
+ngrok_domain = ""
+ngrok_authtoken = ""
+tailscale_bin = "tailscale"
+# Custom command, {port} = public port. Example: "bore local {port} --to bore.pub"
+command = ""
+
+[exec]
+default_timeout_ms = 0        # 0 = wait forever
+default_shell = "auto"        # auto | powershell | pwsh | cmd | bash | sh | zsh
+inline_output_bytes = 60000   # per stream; full output is always saved to a file. 0 = unlimited
+keepalive_secs = 15
+
+[image]
+max_bytes = 30000             # default budget per image result
+max_dim = 1600
+min_quality = 55
+
+[output]
+# Avoid oversized text replies stalling clients; complete results are saved to out/.
+max_text_bytes = 49152
+structured = false            # also send structuredContent (more tokens)
+
+[log]
+level = "info"
+keep_days = 7
+
+[ui]
+dashboard = true              # http://127.0.0.1:8100/ui (local only)
+tray = true                   # Windows tray icon
+
+[browser]
+# The `browser` tool drives its own Chrome/Edge profile over CDP (logins you make there persist).
+path = ""                     # empty = auto-detect Chrome, Edge, Chromium, Brave
+profile = ""                  # empty = <data>/browser/profile
+headless = false
+cdp_url = ""                  # e.g. "http://127.0.0.1:9222" to drive a browser you started yourself
+args = []
+window_size = ""
+
+[plugins]
+# Folders in `dir` with a plugin.toml add tools; they hot-reload when their files change.
+enabled = true
+dir = ""                      # empty = <data>/plugins
+bundled = true                # install/update bundled plugins (blender, unreal) unless you edited them
+python = ""                   # empty = auto-detect

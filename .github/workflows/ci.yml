@@ -1,0 +1,22 @@
+name: Check
+on:
+  push:
+    branches: [main]
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: dtolnay/rust-toolchain@stable
+      - uses: Swatinem/rust-cache@v2
+      - name: Check tracked files
+        run: python scripts/check_secrets.py
+      - name: Unit tests
+        run: cargo test --locked
+      - name: Build
+        run: cargo build --release --locked
+      - name: MCP regression tests
+        run: python tests/run_ci.py target/release/nerve.exe

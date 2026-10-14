@@ -1,0 +1,9 @@
+# Bundled with nerve. Edit freely: once you change a file, nerve stops updating it.
+name = "skills"
+version = "1.0.0"
+description = "Skill library: reusable know-how (Agent Skills SKILL.md format) that AIs read before a task and extend after it"
+command = ["python", "-u", "server.py"]
+
+[env]
+# NERVE_SKILLS_DIR = 'D:\my-skills'          # default: <nerve data>\skills
+# NERVE_SKILLS_EXTRA = 'C:\Users\me\.claude\skills;C:\other'   # extra read-only roots (default: ~/.agents/skills, ~/.claude/skills)

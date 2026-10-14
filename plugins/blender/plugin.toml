@@ -1,0 +1,9 @@
+# Bundled with nerve. Edit freely: once you change a file, nerve stops updating it.
+name = "blender"
+version = "1.0.0"
+description = "Blender: live session over a local bridge, renders, screenshots, import/export, one-shot scripts"
+command = ["python", "-u", "server.py"]
+
+[env]
+# BLENDER_PATH = 'C:\Program Files\Blender Foundation\Blender 5.2\blender.exe'   # default: newest found
+NERVE_BLENDER_PORT = "9886"
